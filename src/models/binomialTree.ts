@@ -7,6 +7,7 @@ export interface BinomialInput {
   steps: number;   // Number of tree steps (e.g., 5 to 50)
   isAmerican: boolean;
   optionType: 'call' | 'put';
+  skipConvergence?: boolean;
 }
 
 export interface TreeNode {
@@ -26,15 +27,14 @@ export interface BinomialResult {
 }
 
 export function calculateBinomialTree(input: BinomialInput): BinomialResult {
-  const { S, K, T, r, v, steps, optionType } = input;
-  const dt = T / steps;
+  const { S, K, T, r, v, steps, optionType, isAmerican, skipConvergence } = input;
+  const dt = T / Math.max(1, steps);
   const u = Math.exp(v * Math.sqrt(dt));
   const d = 1 / u;
   const discount = Math.exp(-r * dt);
   const p = (Math.exp(r * dt) - d) / (u - d);
 
   // Build tree of spots
-  // tree[i][j] where i is step (0 to steps), j is up movements (0 to i)
   const spotTree: number[][] = [];
   for (let i = 0; i <= steps; i++) {
     const layer: number[] = [];
@@ -62,7 +62,7 @@ export function calculateBinomialTree(input: BinomialInput): BinomialResult {
       let finalVal = continuation;
       let earlyEx = false;
 
-      if (input.isAmerican && immediate > continuation + 1e-6) {
+      if (isAmerican && immediate > continuation + 1e-6) {
         finalVal = immediate;
         earlyEx = true;
       }
@@ -75,16 +75,18 @@ export function calculateBinomialTree(input: BinomialInput): BinomialResult {
     }
   }
 
-  // Generate comparison chart across steps
-  const stepChart = [];
-  for (let st = 3; st <= Math.min(steps + 10, 30); st += 3) {
-    const resEur = calculateBinomialTree({ ...input, steps: st, isAmerican: false });
-    const resAmer = calculateBinomialTree({ ...input, steps: st, isAmerican: true });
-    stepChart.push({
-      step: st,
-      europeanPrice: parseFloat(resEur.price.toFixed(2)),
-      americanPrice: parseFloat(resAmer.price.toFixed(2))
-    });
+  // Generate comparison chart across steps ONLY if skipConvergence is false
+  const stepChart: { step: number; europeanPrice: number; americanPrice: number }[] = [];
+  if (!skipConvergence) {
+    for (let st = 3; st <= Math.min(steps + 15, 30); st += 3) {
+      const resEur = calculateBinomialTree({ ...input, steps: st, isAmerican: false, skipConvergence: true });
+      const resAmer = calculateBinomialTree({ ...input, steps: st, isAmerican: true, skipConvergence: true });
+      stepChart.push({
+        step: st,
+        europeanPrice: parseFloat(resEur.price.toFixed(2)),
+        americanPrice: parseFloat(resAmer.price.toFixed(2))
+      });
+    }
   }
 
   return {
