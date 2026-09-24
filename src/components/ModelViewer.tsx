@@ -53,9 +53,10 @@ import { calculateRiskParity } from '../models/riskParity';
 
 interface ModelViewerProps {
   modelId: string;
+  onReturnToDashboard?: () => void;
 }
 
-export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId }) => {
+export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDashboard }) => {
   const modelMeta = ALL_MODELS.find((m) => m.id === modelId) || ALL_MODELS[0];
   const [activeTab, setActiveTab] = useState<'chart' | 'math' | 'code'>('chart');
 
@@ -429,6 +430,27 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId }) => {
 
   return (
     <div className="flex-1 p-6 overflow-y-auto space-y-6">
+      {/* Top Breadcrumb & Navigation Bar */}
+      <div className="flex items-center justify-between text-xs font-mono text-slate-400 bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          {onReturnToDashboard && (
+            <button
+              onClick={onReturnToDashboard}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 font-semibold transition"
+            >
+              <span>← Dashboard</span>
+            </button>
+          )}
+          <span className="text-slate-600">/</span>
+          <span className="text-slate-400">{modelMeta.category}</span>
+          <span className="text-slate-600">/</span>
+          <span className="text-cyan-300 font-bold">{modelMeta.name}</span>
+        </div>
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 uppercase">
+          {modelMeta.modelType}
+        </span>
+      </div>
+
       {/* Header Info */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-5">
         <div>
