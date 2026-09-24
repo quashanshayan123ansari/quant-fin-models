@@ -16,6 +16,17 @@ import { MathFormula } from './MathFormula';
 import { CodeBlock } from './CodeBlock';
 import { ALL_MODELS } from './Sidebar';
 import { Quant3DScene } from './Quant3DScene';
+import {
+  ArrowLeft,
+  ChevronDown,
+  Layers,
+  Sparkles,
+  SlidersHorizontal,
+  Activity,
+  CheckCircle2,
+  Cpu,
+  BarChart3
+} from 'lucide-react';
 
 // Register Chart.js components
 ChartJS.register(
@@ -54,10 +65,15 @@ import { calculateRiskParity } from '../models/riskParity';
 
 interface ModelViewerProps {
   modelId: string;
+  onSelectModel?: (modelId: string) => void;
   onReturnToDashboard?: () => void;
 }
 
-export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDashboard }) => {
+export const ModelViewer: React.FC<ModelViewerProps> = ({
+  modelId,
+  onSelectModel,
+  onReturnToDashboard
+}) => {
   const modelMeta = ALL_MODELS.find((m) => m.id === modelId) || ALL_MODELS[0];
   const [activeTab, setActiveTab] = useState<'chart' | '3d-surface' | 'math' | 'code'>('chart');
 
@@ -97,44 +113,46 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
   const mlAlphaRes = useMemo(() => calculateMLAlpha({ days: 90, treeDepth: 6, featureCount: 5, signalThreshold: 0.5 }), []);
   const riskParityRes = useMemo(() => calculateRiskParity({ volEquities: v, volBonds: 0.06, volCommodities: 0.20, volRealEstate: 0.14, correlation: 0.2 }), [v]);
 
-  // Dynamic Chart Options
+  // Crisp Institutional Light Mode Chart Options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: '#94a3b8', font: { family: 'Fira Code', size: 11 } }
+        labels: { color: '#334155', font: { family: 'Fira Code', size: 11, weight: 'bold' as const } }
       },
       tooltip: {
         backgroundColor: '#0f172a',
         borderColor: '#334155',
         borderWidth: 1,
-        titleColor: '#00f0ff',
-        bodyColor: '#f8fafc'
+        titleColor: '#38bdf8',
+        bodyColor: '#f8fafc',
+        padding: 12,
+        cornerRadius: 8
       }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(51, 65, 85, 0.3)' },
+        grid: { color: 'rgba(226, 232, 240, 0.8)' },
         ticks: { color: '#64748b', font: { family: 'Fira Code', size: 10 } }
       },
       y: {
-        grid: { color: 'rgba(51, 65, 85, 0.3)' },
+        grid: { color: 'rgba(226, 232, 240, 0.8)' },
         ticks: { color: '#64748b', font: { family: 'Fira Code', size: 10 } }
       }
     }
   };
 
-  // Build chart dataset per model
+  // Build chart dataset per model with vivid light mode contrast
   const renderChart = () => {
     switch (modelId) {
       case 'black-scholes': {
         const data = {
           labels: bsmRes.payoffChart.map((p) => `$${p.spot}`),
           datasets: [
-            { label: 'Call Option Price ($)', data: bsmRes.payoffChart.map((p) => p.callValue), borderColor: '#00f0ff', backgroundColor: 'rgba(0, 240, 255, 0.1)', fill: true, tension: 0.4 },
-            { label: 'Call Payoff at Expiry', data: bsmRes.payoffChart.map((p) => p.callPayoff), borderColor: '#10b981', borderDash: [4, 4] },
-            { label: 'Put Option Price ($)', data: bsmRes.payoffChart.map((p) => p.putValue), borderColor: '#f43f5e', backgroundColor: 'rgba(244, 63, 94, 0.05)', fill: true, tension: 0.4 }
+            { label: 'Call Option Price ($)', data: bsmRes.payoffChart.map((p) => p.callValue), borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.08)', fill: true, tension: 0.4, borderWidth: 2.5 },
+            { label: 'Call Payoff at Expiry', data: bsmRes.payoffChart.map((p) => p.callPayoff), borderColor: '#10b981', borderDash: [4, 4], borderWidth: 2 },
+            { label: 'Put Option Price ($)', data: bsmRes.payoffChart.map((p) => p.putValue), borderColor: '#e11d48', backgroundColor: 'rgba(225, 29, 72, 0.05)', fill: true, tension: 0.4, borderWidth: 2 }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -143,13 +161,13 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: mcRes.paths.map((p) => `${p.time}y`),
           datasets: [
-            { label: 'Expected Mean Path ($)', data: mcRes.paths.map((p) => p.mean), borderColor: '#00f0ff', borderWidth: 2.5 },
-            { label: '95th Percentile ($)', data: mcRes.paths.map((p) => p.p95), borderColor: '#10b981', borderDash: [3, 3] },
-            { label: '5th Percentile ($)', data: mcRes.paths.map((p) => p.p5), borderColor: '#f43f5e', borderDash: [3, 3] },
+            { label: 'Expected Mean Path ($)', data: mcRes.paths.map((p) => p.mean), borderColor: '#0284c7', borderWidth: 3 },
+            { label: '95th Percentile ($)', data: mcRes.paths.map((p) => p.p95), borderColor: '#10b981', borderDash: [3, 3], borderWidth: 2 },
+            { label: '5th Percentile ($)', data: mcRes.paths.map((p) => p.p5), borderColor: '#e11d48', borderDash: [3, 3], borderWidth: 2 },
             ...mcRes.paths[0].samplePaths.map((_, idx) => ({
               label: `Sample Path ${idx + 1}`,
               data: mcRes.paths.map((p) => p.samplePaths[idx]),
-              borderColor: 'rgba(148, 163, 184, 0.2)',
+              borderColor: 'rgba(148, 163, 184, 0.3)',
               borderWidth: 1
             }))
           ]
@@ -160,8 +178,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: binomRes.stepChart.map((s) => `Step ${s.step}`),
           datasets: [
-            { label: 'American Option Price ($)', data: binomRes.stepChart.map((s) => s.americanPrice), borderColor: '#00f0ff', backgroundColor: 'rgba(0,240,255,0.1)', fill: true },
-            { label: 'European Option Price ($)', data: binomRes.stepChart.map((s) => s.europeanPrice), borderColor: '#8b5cf6', borderDash: [4, 4] }
+            { label: 'American Option Price ($)', data: binomRes.stepChart.map((s) => s.americanPrice), borderColor: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.08)', fill: true, borderWidth: 2.5 },
+            { label: 'European Option Price ($)', data: binomRes.stepChart.map((s) => s.europeanPrice), borderColor: '#7c3aed', borderDash: [4, 4], borderWidth: 2 }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -173,9 +191,9 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
             {
               label: 'Return Loss Density',
               data: varRes.distributionChart.map((d) => d.density),
-              backgroundColor: varRes.distributionChart.map((d) => (d.isTailLoss ? 'rgba(244, 63, 94, 0.7)' : 'rgba(0, 240, 255, 0.3)')),
-              borderColor: varRes.distributionChart.map((d) => (d.isTailLoss ? '#f43f5e' : '#00f0ff')),
-              borderWidth: 1
+              backgroundColor: varRes.distributionChart.map((d) => (d.isTailLoss ? 'rgba(225, 29, 72, 0.85)' : 'rgba(2, 132, 199, 0.4)')),
+              borderColor: varRes.distributionChart.map((d) => (d.isTailLoss ? '#e11d48' : '#0284c7')),
+              borderWidth: 1.5
             }
           ]
         };
@@ -185,8 +203,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: garchRes.series.map((s) => `Day ${s.day}`),
           datasets: [
-            { label: 'Annualized Conditional Volatility (%)', data: garchRes.series.map((s) => s.conditionalVolPct), borderColor: '#00f0ff', borderWidth: 2 },
-            { label: '2-Sigma Upper Vol Band (%)', data: garchRes.series.map((s) => s.upperBandPct), borderColor: '#f59e0b', borderDash: [3, 3] }
+            { label: 'Annualized Conditional Volatility (%)', data: garchRes.series.map((s) => s.conditionalVolPct), borderColor: '#0284c7', borderWidth: 2.5 },
+            { label: '2-Sigma Upper Vol Band (%)', data: garchRes.series.map((s) => s.upperBandPct), borderColor: '#d97706', borderDash: [3, 3], borderWidth: 2 }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -195,8 +213,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: capmRes.smlChart.map((s) => `β=${s.beta}`),
           datasets: [
-            { label: 'Security Market Line (SML)', data: capmRes.smlChart.map((s) => s.expectedReturnPct), borderColor: '#00f0ff', borderWidth: 2 },
-            { label: 'Selected Asset', data: capmRes.smlChart.map((s) => (s.isSelected ? s.expectedReturnPct : null)), pointRadius: 8, pointBackgroundColor: '#10b981', borderColor: '#10b981' }
+            { label: 'Security Market Line (SML)', data: capmRes.smlChart.map((s) => s.expectedReturnPct), borderColor: '#0284c7', borderWidth: 2.5 },
+            { label: 'Selected Asset', data: capmRes.smlChart.map((s) => (s.isSelected ? s.expectedReturnPct : null)), pointRadius: 9, pointBackgroundColor: '#10b981', borderColor: '#10b981' }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -205,7 +223,7 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: factorRes.breakdownChart.map((f) => f.factor),
           datasets: [
-            { label: 'Expected Return Contribution (%)', data: factorRes.breakdownChart.map((f) => f.contributionPct), backgroundColor: ['#3b82f6', '#00f0ff', '#10b981', '#f59e0b', '#8b5cf6'] }
+            { label: 'Expected Return Contribution (%)', data: factorRes.breakdownChart.map((f) => f.contributionPct), backgroundColor: ['#2563eb', '#0284c7', '#10b981', '#d97706', '#7c3aed'] }
           ]
         };
         return <Bar data={data} options={chartOptions} />;
@@ -214,17 +232,17 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: kalmanRes.series.map((s) => `Day ${s.day}`),
           datasets: [
-            { label: 'Estimated Dynamic Beta (β_t)', data: kalmanRes.series.map((s) => s.estimatedBeta), borderColor: '#00f0ff', yAxisID: 'y' },
-            { label: 'Spread Z-Score', data: kalmanRes.series.map((s) => s.zScore), borderColor: '#f43f5e', borderDash: [2, 2], yAxisID: 'y1' }
+            { label: 'Estimated Dynamic Beta (β_t)', data: kalmanRes.series.map((s) => s.estimatedBeta), borderColor: '#0284c7', borderWidth: 2.5, yAxisID: 'y' },
+            { label: 'Spread Z-Score', data: kalmanRes.series.map((s) => s.zScore), borderColor: '#e11d48', borderDash: [2, 2], borderWidth: 2, yAxisID: 'y1' }
           ]
         };
-        return <Line data={data} options={{ ...chartOptions, scales: { ...chartOptions.scales, y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#f43f5e' } } } }} />;
+        return <Line data={data} options={{ ...chartOptions, scales: { ...chartOptions.scales, y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#e11d48' } } } }} />;
       }
       case 'hmm-regimes': {
         const data = {
           labels: hmmRes.series.map((s) => `Day ${s.day}`),
           datasets: [
-            { label: 'Asset Price ($)', data: hmmRes.series.map((s) => s.price), borderColor: '#00f0ff', yAxisID: 'y' },
+            { label: 'Asset Price ($)', data: hmmRes.series.map((s) => s.price), borderColor: '#0284c7', borderWidth: 2.5, yAxisID: 'y' },
             { label: 'Bull State Prob (%)', data: hmmRes.series.map((s) => s.bullProbPct), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, yAxisID: 'y1' }
           ]
         };
@@ -234,8 +252,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: hestonRes.samplePaths.map((p) => `${p.time}y`),
           datasets: [
-            { label: 'Asset Price ($)', data: hestonRes.samplePaths.map((p) => p.spot), borderColor: '#00f0ff', yAxisID: 'y' },
-            { label: 'Stochastic Volatility (%)', data: hestonRes.samplePaths.map((p) => p.volatilityPct), borderColor: '#8b5cf6', yAxisID: 'y1' }
+            { label: 'Asset Price ($)', data: hestonRes.samplePaths.map((p) => p.spot), borderColor: '#0284c7', borderWidth: 2.5, yAxisID: 'y' },
+            { label: 'Stochastic Volatility (%)', data: hestonRes.samplePaths.map((p) => p.volatilityPct), borderColor: '#7c3aed', borderWidth: 2, yAxisID: 'y1' }
           ]
         };
         return <Line data={data} options={{ ...chartOptions, scales: { ...chartOptions.scales, y1: { position: 'right', grid: { drawOnChartArea: false } } } }} />;
@@ -244,8 +262,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: vasicekRes.yieldCurve.map((y) => `${y.maturity}Y`),
           datasets: [
-            { label: 'Zero-Coupon Yield Curve (%)', data: vasicekRes.yieldCurve.map((y) => y.zeroRatePct), borderColor: '#00f0ff', backgroundColor: 'rgba(0,240,255,0.1)', fill: true },
-            { label: 'Zero Bond Price ($)', data: vasicekRes.yieldCurve.map((y) => y.bondPrice * 100), borderColor: '#10b981', yAxisID: 'y1' }
+            { label: 'Zero-Coupon Yield Curve (%)', data: vasicekRes.yieldCurve.map((y) => y.zeroRatePct), borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.08)', fill: true, borderWidth: 2.5 },
+            { label: 'Zero Bond Price ($)', data: vasicekRes.yieldCurve.map((y) => y.bondPrice * 100), borderColor: '#10b981', borderWidth: 2, yAxisID: 'y1' }
           ]
         };
         return <Line data={data} options={{ ...chartOptions, scales: { ...chartOptions.scales, y1: { position: 'right', grid: { drawOnChartArea: false } } } }} />;
@@ -254,8 +272,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: sabrRes.smileChart.map((s) => `$${s.strike}`),
           datasets: [
-            { label: 'SABR Volatility Smile (%)', data: sabrRes.smileChart.map((s) => s.sabrVolPct), borderColor: '#00f0ff', borderWidth: 2.5 },
-            { label: 'Lognormal Flat Vol (%)', data: sabrRes.smileChart.map((s) => s.lognormalVolPct), borderColor: '#64748b', borderDash: [4, 4] }
+            { label: 'SABR Volatility Smile (%)', data: sabrRes.smileChart.map((s) => s.sabrVolPct), borderColor: '#0284c7', borderWidth: 3 },
+            { label: 'Lognormal Flat Vol (%)', data: sabrRes.smileChart.map((s) => s.lognormalVolPct), borderColor: '#94a3b8', borderDash: [4, 4], borderWidth: 2 }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -264,7 +282,7 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: ['Standalone Asset 1', 'Standalone Asset 2', 'Joint Default', 'Conditional P(D2|D1)'],
           datasets: [
-            { label: 'Default Probabilities (%)', data: [copulaRes.standaloneProb1 * 100, copulaRes.standaloneProb2 * 100, copulaRes.jointDefaultProb * 100, copulaRes.conditionalProb * 100], backgroundColor: ['#3b82f6', '#8b5cf6', '#f43f5e', '#f59e0b'] }
+            { label: 'Default Probabilities (%)', data: [copulaRes.standaloneProb1 * 100, copulaRes.standaloneProb2 * 100, copulaRes.jointDefaultProb * 100, copulaRes.conditionalProb * 100], backgroundColor: ['#2563eb', '#7c3aed', '#e11d48', '#d97706'] }
           ]
         };
         return <Bar data={data} options={chartOptions} />;
@@ -276,10 +294,10 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: [...historyLabels, ...forecastLabels],
           datasets: [
-            { label: 'Historical Asset Price', data: [...arimaRes.historySeries.map((h) => h.actual), ...arimaRes.forecastSeries.map(() => null)], borderColor: '#00f0ff' },
-            { label: 'ARIMA Point Forecast', data: [...arimaRes.historySeries.map(() => null), ...arimaRes.forecastSeries.map((f) => f.forecast)], borderColor: '#10b981', borderDash: [2, 2] },
-            { label: '95% Upper CI', data: [...arimaRes.historySeries.map(() => null), ...arimaRes.forecastSeries.map((f) => f.upperCI)], borderColor: 'rgba(245,158,11,0.5)', borderDash: [4, 4] },
-            { label: '95% Lower CI', data: [...arimaRes.historySeries.map(() => null), ...arimaRes.forecastSeries.map((f) => f.lowerCI)], borderColor: 'rgba(245,158,11,0.5)', borderDash: [4, 4] }
+            { label: 'Historical Asset Price', data: [...arimaRes.historySeries.map((h) => h.actual), ...arimaRes.forecastSeries.map(() => null)], borderColor: '#0284c7', borderWidth: 2.5 },
+            { label: 'ARIMA Point Forecast', data: [...arimaRes.historySeries.map(() => null), ...arimaRes.forecastSeries.map((f) => f.forecast)], borderColor: '#10b981', borderDash: [2, 2], borderWidth: 2.5 },
+            { label: '95% Upper CI', data: [...arimaRes.historySeries.map(() => null), ...arimaRes.forecastSeries.map((f) => f.upperCI)], borderColor: 'rgba(217,119,6,0.7)', borderDash: [4, 4] },
+            { label: '95% Lower CI', data: [...arimaRes.historySeries.map(() => null), ...arimaRes.forecastSeries.map((f) => f.lowerCI)], borderColor: 'rgba(217,119,6,0.7)', borderDash: [4, 4] }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -288,8 +306,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: pcaRes.yieldCurveChart.map((y) => `${y.maturityYears}Y`),
           datasets: [
-            { label: 'Baseline Yield Curve (%)', data: pcaRes.yieldCurveChart.map((y) => y.originalYieldPct), borderColor: '#64748b' },
-            { label: 'Shifted PCA Reconstructed Curve (%)', data: pcaRes.yieldCurveChart.map((y) => y.reconstructedYieldPct), borderColor: '#00f0ff', borderWidth: 2.5 }
+            { label: 'Baseline Yield Curve (%)', data: pcaRes.yieldCurveChart.map((y) => y.originalYieldPct), borderColor: '#94a3b8', borderWidth: 2 },
+            { label: 'Shifted PCA Reconstructed Curve (%)', data: pcaRes.yieldCurveChart.map((y) => y.reconstructedYieldPct), borderColor: '#0284c7', borderWidth: 3 }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -298,8 +316,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: portOptRes.frontierChart.map((f) => `${f.volPct}%`),
           datasets: [
-            { label: 'Efficient Frontier', data: portOptRes.frontierChart.map((f) => f.returnPct), borderColor: '#00f0ff', backgroundColor: 'rgba(0,240,255,0.05)', fill: true },
-            { label: 'Max Sharpe Tangency Portfolio', data: portOptRes.frontierChart.map((f) => (f.isTangency ? f.returnPct : null)), pointRadius: 9, pointBackgroundColor: '#10b981', borderColor: '#10b981' }
+            { label: 'Efficient Frontier', data: portOptRes.frontierChart.map((f) => f.returnPct), borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.06)', fill: true, borderWidth: 2.5 },
+            { label: 'Max Sharpe Tangency Portfolio', data: portOptRes.frontierChart.map((f) => (f.isTangency ? f.returnPct : null)), pointRadius: 10, pointBackgroundColor: '#10b981', borderColor: '#10b981' }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -308,10 +326,10 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: greeksRes.greekCurves.map((g) => `$${g.spot}`),
           datasets: [
-            { label: 'Delta (Δ)', data: greeksRes.greekCurves.map((g) => g.delta), borderColor: '#00f0ff' },
-            { label: 'Gamma (Γ)', data: greeksRes.greekCurves.map((g) => g.gamma * 10), borderColor: '#10b981' },
-            { label: 'Vega (ν)', data: greeksRes.greekCurves.map((g) => g.vega), borderColor: '#8b5cf6' },
-            { label: 'Theta (Θ)', data: greeksRes.greekCurves.map((g) => g.theta), borderColor: '#f43f5e' }
+            { label: 'Delta (Δ)', data: greeksRes.greekCurves.map((g) => g.delta), borderColor: '#0284c7', borderWidth: 2.5 },
+            { label: 'Gamma (Γ)', data: greeksRes.greekCurves.map((g) => g.gamma * 10), borderColor: '#10b981', borderWidth: 2 },
+            { label: 'Vega (ν)', data: greeksRes.greekCurves.map((g) => g.vega), borderColor: '#7c3aed', borderWidth: 2 },
+            { label: 'Theta (Θ)', data: greeksRes.greekCurves.map((g) => g.theta), borderColor: '#e11d48', borderWidth: 2 }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -320,8 +338,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: mertonRes.mertonChart.map((m) => `${m.firmValueRatio}x Debt`),
           datasets: [
-            { label: 'Equity Value ($M)', data: mertonRes.mertonChart.map((m) => m.equityVal), borderColor: '#00f0ff', yAxisID: 'y' },
-            { label: 'Default Probability (%)', data: mertonRes.mertonChart.map((m) => m.defaultProbPct), borderColor: '#f43f5e', yAxisID: 'y1' }
+            { label: 'Equity Value ($M)', data: mertonRes.mertonChart.map((m) => m.equityVal), borderColor: '#0284c7', borderWidth: 2.5, yAxisID: 'y' },
+            { label: 'Default Probability (%)', data: mertonRes.mertonChart.map((m) => m.defaultProbPct), borderColor: '#e11d48', borderWidth: 2, yAxisID: 'y1' }
           ]
         };
         return <Line data={data} options={{ ...chartOptions, scales: { ...chartOptions.scales, y1: { position: 'right', grid: { drawOnChartArea: false } } } }} />;
@@ -330,8 +348,8 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: mlAlphaRes.cumulativeReturns.map((c) => `Day ${c.day}`),
           datasets: [
-            { label: 'ML Strategy Alpha Cumulative Return (%)', data: mlAlphaRes.cumulativeReturns.map((c) => c.strategyPct), borderColor: '#10b981', borderWidth: 2.5 },
-            { label: 'Market Benchmark Return (%)', data: mlAlphaRes.cumulativeReturns.map((c) => c.benchmarkPct), borderColor: '#64748b' }
+            { label: 'ML Strategy Alpha Cumulative Return (%)', data: mlAlphaRes.cumulativeReturns.map((c) => c.strategyPct), borderColor: '#10b981', borderWidth: 3 },
+            { label: 'Market Benchmark Return (%)', data: mlAlphaRes.cumulativeReturns.map((c) => c.benchmarkPct), borderColor: '#64748b', borderWidth: 2 }
           ]
         };
         return <Line data={data} options={chartOptions} />;
@@ -340,7 +358,7 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         const data = {
           labels: riskParityRes.assetWeights.map((a) => a.asset),
           datasets: [
-            { label: 'Capital Allocation Weight (%)', data: riskParityRes.assetWeights.map((a) => a.weightPct), backgroundColor: '#00f0ff' },
+            { label: 'Capital Allocation Weight (%)', data: riskParityRes.assetWeights.map((a) => a.weightPct), backgroundColor: '#0284c7' },
             { label: 'Risk Contribution (%)', data: riskParityRes.assetWeights.map((a) => a.riskContribPct), backgroundColor: '#10b981' }
           ]
         };
@@ -351,7 +369,6 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
     }
   };
 
-  // Math equations & documentation per model
   const getMathFormula = () => {
     switch (modelId) {
       case 'black-scholes':
@@ -430,68 +447,102 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
   };
 
   return (
-    <div className="flex-1 p-6 overflow-y-auto space-y-6">
-      {/* Top Breadcrumb & Navigation Bar */}
-      <div className="flex items-center justify-between text-xs font-mono text-slate-400 bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5">
-        <div className="flex items-center gap-2">
+    <div className="w-full min-h-screen bg-slate-50 text-slate-900 p-6 md:p-8 space-y-6">
+      {/* Top Navigation & Quick Model Dropdown Bar */}
+      <div className="bg-white border border-slate-200/90 shadow-sm rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           {onReturnToDashboard && (
             <button
               onClick={onReturnToDashboard}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 font-semibold transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300/80 shadow-sm"
             >
-              <span>← Dashboard</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Dashboard Overview</span>
             </button>
           )}
-          <span className="text-slate-600">/</span>
-          <span className="text-slate-400">{modelMeta.category}</span>
-          <span className="text-slate-600">/</span>
-          <span className="text-cyan-300 font-bold">{modelMeta.name}</span>
+
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
+            <span>Category:</span>
+            <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">
+              {modelMeta.category}
+            </span>
+          </div>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 uppercase">
-          {modelMeta.modelType}
-        </span>
+
+        {/* Model Dropdown Selector (No Sidebar Needed!) */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono font-bold text-slate-500 uppercase">Select Model:</span>
+          <div className="relative min-w-[240px]">
+            <select
+              value={modelId}
+              onChange={(e) => onSelectModel && onSelectModel(e.target.value)}
+              className="w-full bg-slate-100 hover:bg-slate-200/80 border border-slate-300 text-slate-900 text-xs font-mono font-bold rounded-xl px-3.5 py-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500 transition appearance-none pr-8"
+            >
+              {ALL_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.category})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          </div>
+
+          <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 uppercase font-bold hidden sm:inline-block">
+            {modelMeta.modelType}
+          </span>
+        </div>
       </div>
 
-      {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel p-5">
+      {/* Model Header Info & View Mode Tabs */}
+      <div className="bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold text-white tracking-tight">{modelMeta.name}</h2>
-            <span className="badge badge-cyan">{modelMeta.category}</span>
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight font-sans">{modelMeta.name}</h2>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
+              {modelMeta.category}
+            </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1 max-w-2xl">{modelMeta.description}</p>
+          <p className="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed">{modelMeta.description}</p>
         </div>
 
-        {/* View Tabs */}
-        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+        {/* View Mode Tabs */}
+        <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shrink-0">
           <button
             onClick={() => setActiveTab('chart')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              activeTab === 'chart' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTab === 'chart'
+                ? 'bg-white text-cyan-700 shadow-sm border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Interactive Terminal
           </button>
           <button
             onClick={() => setActiveTab('3d-surface')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              activeTab === '3d-surface' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTab === '3d-surface'
+                ? 'bg-white text-cyan-700 shadow-sm border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            3D Volatility Surface
+            3D Volatility Stage
           </button>
           <button
             onClick={() => setActiveTab('math')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              activeTab === 'math' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTab === 'math'
+                ? 'bg-white text-cyan-700 shadow-sm border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             LaTeX Formulation
           </button>
           <button
             onClick={() => setActiveTab('code')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
-              activeTab === 'code' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTab === 'code'
+                ? 'bg-white text-cyan-700 shadow-sm border border-slate-200'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Code Snippet
@@ -499,14 +550,15 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         </div>
       </div>
 
+      {/* 3D Volatility Surface Stage View */}
       {activeTab === '3d-surface' && (
-        <div className="glass-panel p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
-              <h3 className="text-sm font-mono font-bold text-cyan-400 uppercase">
+              <h3 className="text-sm font-mono font-bold text-slate-800 uppercase">
                 {modelMeta.name} — Interactive 3D Manifold Stage
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Dynamic 3D visualization of volatility surface skew, term structure, and PDE solution space.
               </p>
             </div>
@@ -521,68 +573,75 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
                 ? 'vasicek'
                 : 'black-scholes'
             }
-            height={460}
+            height={480}
             interactive={true}
           />
         </div>
       )}
 
+      {/* Interactive Main Calculation Terminal */}
       {activeTab === 'chart' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Controls Panel */}
-          <div className="lg:col-span-4 glass-panel p-5 space-y-5">
-            <h3 className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider border-b border-slate-800 pb-2">
-              Model Parameter Controls
-            </h3>
+          <div className="lg:col-span-4 bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-xs font-mono font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-cyan-600" />
+                Model Parameter Controls
+              </h3>
+              <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
+                LIVE ENGINE
+              </span>
+            </div>
 
             {/* Dynamic Slider Controls */}
             <div className="space-y-4 text-xs">
               <div>
-                <div className="flex justify-between text-slate-300 font-mono mb-1">
+                <div className="flex justify-between text-slate-700 font-medium mb-1">
                   <span>Spot / Asset Price (S₀):</span>
-                  <span className="text-cyan-400 font-bold">${S}</span>
+                  <span className="text-cyan-700 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${S}</span>
                 </div>
-                <input type="range" min="10" max="300" step="1" value={S} onChange={(e) => setS(Number(e.target.value))} className="w-full" />
+                <input type="range" min="10" max="300" step="1" value={S} onChange={(e) => setS(Number(e.target.value))} className="w-full accent-cyan-600 cursor-pointer" />
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-300 font-mono mb-1">
+                <div className="flex justify-between text-slate-700 font-medium mb-1">
                   <span>Strike / Debt Level (K):</span>
-                  <span className="text-cyan-400 font-bold">${K}</span>
+                  <span className="text-cyan-700 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${K}</span>
                 </div>
-                <input type="range" min="10" max="300" step="1" value={K} onChange={(e) => setK(Number(e.target.value))} className="w-full" />
+                <input type="range" min="10" max="300" step="1" value={K} onChange={(e) => setK(Number(e.target.value))} className="w-full accent-cyan-600 cursor-pointer" />
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-300 font-mono mb-1">
+                <div className="flex justify-between text-slate-700 font-medium mb-1">
                   <span>Volatility (σ):</span>
-                  <span className="text-cyan-400 font-bold">{(v * 100).toFixed(0)}%</span>
+                  <span className="text-cyan-700 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{(v * 100).toFixed(0)}%</span>
                 </div>
-                <input type="range" min="0.05" max="0.80" step="0.01" value={v} onChange={(e) => setV(Number(e.target.value))} className="w-full" />
+                <input type="range" min="0.05" max="0.80" step="0.01" value={v} onChange={(e) => setV(Number(e.target.value))} className="w-full accent-cyan-600 cursor-pointer" />
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-300 font-mono mb-1">
+                <div className="flex justify-between text-slate-700 font-medium mb-1">
                   <span>Risk-Free Rate (r):</span>
-                  <span className="text-cyan-400 font-bold">{(r * 100).toFixed(1)}%</span>
+                  <span className="text-cyan-700 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{(r * 100).toFixed(1)}%</span>
                 </div>
-                <input type="range" min="0.00" max="0.15" step="0.005" value={r} onChange={(e) => setR(Number(e.target.value))} className="w-full" />
+                <input type="range" min="0.00" max="0.15" step="0.005" value={r} onChange={(e) => setR(Number(e.target.value))} className="w-full accent-cyan-600 cursor-pointer" />
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-300 font-mono mb-1">
+                <div className="flex justify-between text-slate-700 font-medium mb-1">
                   <span>Time Horizon (T):</span>
-                  <span className="text-cyan-400 font-bold">{T} Year(s)</span>
+                  <span className="text-cyan-700 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{T} Year(s)</span>
                 </div>
-                <input type="range" min="0.1" max="5.0" step="0.1" value={T} onChange={(e) => setT(Number(e.target.value))} className="w-full" />
+                <input type="range" min="0.1" max="5.0" step="0.1" value={T} onChange={(e) => setT(Number(e.target.value))} className="w-full accent-cyan-600 cursor-pointer" />
               </div>
 
               <div>
-                <div className="flex justify-between text-slate-300 font-mono mb-1">
+                <div className="flex justify-between text-slate-700 font-medium mb-1">
                   <span>Asset Correlation (ρ) / Beta (β):</span>
-                  <span className="text-cyan-400 font-bold">{rho.toFixed(2)}</span>
+                  <span className="text-cyan-700 font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{rho.toFixed(2)}</span>
                 </div>
-                <input type="range" min="-0.9" max="0.9" step="0.05" value={rho} onChange={(e) => setRho(Number(e.target.value))} className="w-full" />
+                <input type="range" min="-0.9" max="0.9" step="0.05" value={rho} onChange={(e) => setRho(Number(e.target.value))} className="w-full accent-cyan-600 cursor-pointer" />
               </div>
             </div>
           </div>
@@ -590,49 +649,52 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
           {/* Right Output Dashboard */}
           <div className="lg:col-span-8 space-y-6">
             {/* Key Metric Highlight Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="glass-panel p-3.5">
-                <div className="text-[11px] text-slate-400 font-mono">CALL / PRIMARY VAL</div>
-                <div className="text-lg font-bold text-cyan-400 font-mono mt-0.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white border border-slate-200/90 border-t-4 border-t-cyan-500 shadow-sm rounded-2xl p-4">
+                <div className="text-[11px] text-slate-500 font-mono font-bold uppercase">CALL / PRIMARY VAL</div>
+                <div className="text-xl font-bold text-slate-900 font-mono mt-1">
                   ${bsmRes.callPrice.toFixed(2)}
                 </div>
-                <div className="text-[10px] text-emerald-400 mt-0.5">Δ = {bsmRes.callDelta.toFixed(2)}</div>
+                <div className="text-[11px] text-emerald-600 font-medium mt-0.5">Δ = {bsmRes.callDelta.toFixed(2)}</div>
               </div>
 
-              <div className="glass-panel p-3.5">
-                <div className="text-[11px] text-slate-400 font-mono">10D 95% VaR</div>
-                <div className="text-lg font-bold text-rose-400 font-mono mt-0.5">
+              <div className="bg-white border border-slate-200/90 border-t-4 border-t-rose-500 shadow-sm rounded-2xl p-4">
+                <div className="text-[11px] text-slate-500 font-mono font-bold uppercase">10D 95% VaR</div>
+                <div className="text-xl font-bold text-rose-600 font-mono mt-1">
                   ${(varRes.parametricVaR / 1000).toFixed(1)}k
                 </div>
-                <div className="text-[10px] text-rose-400 mt-0.5">CVaR = ${(varRes.parametricCVaR / 1000).toFixed(1)}k</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">CVaR = ${(varRes.parametricCVaR / 1000).toFixed(1)}k</div>
               </div>
 
-              <div className="glass-panel p-3.5">
-                <div className="text-[11px] text-slate-400 font-mono">MAX SHARPE RATIO</div>
-                <div className="text-lg font-bold text-emerald-400 font-mono mt-0.5">
+              <div className="bg-white border border-slate-200/90 border-t-4 border-t-emerald-500 shadow-sm rounded-2xl p-4">
+                <div className="text-[11px] text-slate-500 font-mono font-bold uppercase">MAX SHARPE RATIO</div>
+                <div className="text-xl font-bold text-emerald-600 font-mono mt-1">
                   {portOptRes.maxSharpeRatio}
                 </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Return = {portOptRes.maxSharpeReturnPct}%</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Return = {portOptRes.maxSharpeReturnPct}%</div>
               </div>
 
-              <div className="glass-panel p-3.5">
-                <div className="text-[11px] text-slate-400 font-mono">MERTON DEFAULT PROB</div>
-                <div className="text-lg font-bold text-amber-400 font-mono mt-0.5">
+              <div className="bg-white border border-slate-200/90 border-t-4 border-t-amber-500 shadow-sm rounded-2xl p-4">
+                <div className="text-[11px] text-slate-500 font-mono font-bold uppercase">MERTON DEFAULT PROB</div>
+                <div className="text-xl font-bold text-amber-600 font-mono mt-1">
                   {mertonRes.defaultProbabilityPct}%
                 </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">DD = {mertonRes.distanceToDefault}</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">DD = {mertonRes.distanceToDefault}</div>
               </div>
             </div>
 
-            {/* Interactive Chart */}
-            <div className="glass-panel p-5 h-80 relative">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-mono font-semibold text-slate-300 uppercase">
+            {/* Interactive Chart Visualizer */}
+            <div className="bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 relative">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <h4 className="text-xs font-mono font-bold text-slate-800 uppercase flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-cyan-600" />
                   {modelMeta.name} Terminal Visualizer
                 </h4>
-                <span className="text-[10px] font-mono text-cyan-400">REAL-TIME SIMULATION</span>
+                <span className="text-[10px] font-mono font-bold text-cyan-700 bg-cyan-50 px-2.5 py-0.5 rounded-full border border-cyan-200">
+                  REAL-TIME SIMULATION
+                </span>
               </div>
-              <div className="h-64 w-full">
+              <div className="h-72 w-full">
                 {renderChart()}
               </div>
             </div>
@@ -640,22 +702,28 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
         </div>
       )}
 
+      {/* LaTeX Formulation Tab */}
       {activeTab === 'math' && (
-        <div className="glass-panel p-6 space-y-4">
-          <h3 className="text-sm font-mono font-bold text-cyan-400 uppercase">Mathematical Derivations & SDE Equations</h3>
-          <div className="bg-slate-950 p-6 rounded-lg border border-slate-800 flex justify-center">
+        <div className="bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 space-y-4">
+          <h3 className="text-sm font-mono font-bold text-slate-800 uppercase border-b border-slate-100 pb-3">
+            Mathematical Derivations &amp; Stochastic PDE Formulation
+          </h3>
+          <div className="bg-slate-50 p-8 rounded-xl border border-slate-200 flex justify-center">
             <MathFormula math={getMathFormula()} block={true} />
           </div>
-          <div className="text-xs text-slate-400 leading-relaxed space-y-2">
-            <p><strong className="text-slate-200">Theoretical Background:</strong> The model evaluates continuous financial dynamics using partial differential equations (PDEs) or stochastic differential equations (SDEs).</p>
-            <p><strong className="text-slate-200">Key Parameters:</strong> S₀ = Spot Price, K = Strike/Barrier Price, r = Risk-Free Rate, σ = Volatility, T = Maturity.</p>
+          <div className="text-xs text-slate-600 leading-relaxed space-y-2">
+            <p><strong className="text-slate-800">Theoretical Background:</strong> The model evaluates continuous financial dynamics using partial differential equations (PDEs) or stochastic differential equations (SDEs).</p>
+            <p><strong className="text-slate-800">Key Parameters:</strong> S₀ = Spot Price, K = Strike/Barrier Price, r = Risk-Free Rate, σ = Volatility, T = Maturity.</p>
           </div>
         </div>
       )}
 
+      {/* Pure TypeScript Code Snippet Tab */}
       {activeTab === 'code' && (
-        <div className="glass-panel p-6 space-y-4">
-          <h3 className="text-sm font-mono font-bold text-cyan-400 uppercase">Pure TypeScript Engine Implementation</h3>
+        <div className="bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 space-y-4">
+          <h3 className="text-sm font-mono font-bold text-slate-800 uppercase border-b border-slate-100 pb-3">
+            Pure TypeScript Engine Implementation
+          </h3>
           <CodeBlock code={getCodeSnippet()} language="typescript" />
         </div>
       )}

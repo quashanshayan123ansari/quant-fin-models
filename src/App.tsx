@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Header } from './components/Header';
-import { Sidebar, ALL_MODELS } from './components/Sidebar';
+import { ALL_MODELS } from './components/Sidebar';
 import { ModelViewer } from './components/ModelViewer';
 import { DashboardOverview } from './components/DashboardOverview';
 import { ReadmeModal } from './components/ReadmeModal';
@@ -50,51 +50,21 @@ export const App: React.FC = () => {
       />
 
       {viewMode === 'dashboard' ? (
-        /* Front Dashboard Page with Rectangular Model Tabs */
+        /* Front Dashboard Page with Rectangular Model Tabs & 3D Stage */
         <DashboardOverview
           onSelectModel={handleSelectModelFromDashboard}
           onOpenReadme={() => setIsReadmeOpen(true)}
         />
       ) : (
-        /* Dedicated Model Workspace View */
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Category Pills Bar */}
-          <div className="bg-slate-900/60 border-b border-slate-800 px-6 py-2 flex items-center gap-2 overflow-x-auto text-xs font-mono">
-            <span className="text-slate-500 font-bold uppercase mr-2 text-[10px]">Filter Category:</span>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-md transition whitespace-nowrap ${
-                  selectedCategory === cat
-                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 font-semibold'
-                    : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 border border-slate-800'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Main Terminal Grid */}
-          <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-            {/* Left Sidebar */}
-            <Sidebar
-              activeModelId={activeModelId}
-              setActiveModelId={setActiveModelId}
-              searchQuery={searchQuery}
-              selectedCategory={selectedCategory}
+        /* Dedicated Full-Width Realistic Model Workspace View (No Left Sidebar) */
+        <div className="flex-1 flex flex-col min-h-0 bg-slate-50 text-slate-900">
+          <main className="flex-1 flex flex-col min-w-0 w-full">
+            <ModelViewer
+              modelId={activeModelId}
+              onSelectModel={(id) => setActiveModelId(id)}
               onReturnToDashboard={() => setViewMode('dashboard')}
             />
-
-            {/* Active Model Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 bg-slate-950">
-              <ModelViewer
-                modelId={activeModelId}
-                onReturnToDashboard={() => setViewMode('dashboard')}
-              />
-            </main>
-          </div>
+          </main>
         </div>
       )}
 
