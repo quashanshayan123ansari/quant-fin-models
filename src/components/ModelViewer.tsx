@@ -15,6 +15,7 @@ import { Line, Bar } from 'react-chartjs-2';
 import { MathFormula } from './MathFormula';
 import { CodeBlock } from './CodeBlock';
 import { ALL_MODELS } from './Sidebar';
+import { Quant3DScene } from './Quant3DScene';
 
 // Register Chart.js components
 ChartJS.register(
@@ -58,7 +59,7 @@ interface ModelViewerProps {
 
 export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDashboard }) => {
   const modelMeta = ALL_MODELS.find((m) => m.id === modelId) || ALL_MODELS[0];
-  const [activeTab, setActiveTab] = useState<'chart' | 'math' | 'code'>('chart');
+  const [activeTab, setActiveTab] = useState<'chart' | '3d-surface' | 'math' | 'code'>('chart');
 
   // Shared state for parameters across models
   const [S, setS] = useState<number>(100);
@@ -472,6 +473,14 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
             Interactive Terminal
           </button>
           <button
+            onClick={() => setActiveTab('3d-surface')}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+              activeTab === '3d-surface' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            3D Volatility Surface
+          </button>
+          <button
             onClick={() => setActiveTab('math')}
             className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
               activeTab === 'math' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'text-slate-400 hover:text-slate-200'
@@ -489,6 +498,34 @@ export const ModelViewer: React.FC<ModelViewerProps> = ({ modelId, onReturnToDas
           </button>
         </div>
       </div>
+
+      {activeTab === '3d-surface' && (
+        <div className="glass-panel p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 className="text-sm font-mono font-bold text-cyan-400 uppercase">
+                {modelMeta.name} — Interactive 3D Manifold Stage
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Dynamic 3D visualization of volatility surface skew, term structure, and PDE solution space.
+              </p>
+            </div>
+          </div>
+          <Quant3DScene
+            surfaceType={
+              modelId.includes('heston')
+                ? 'heston'
+                : modelId.includes('sabr')
+                ? 'sabr'
+                : modelId.includes('vasicek')
+                ? 'vasicek'
+                : 'black-scholes'
+            }
+            height={460}
+            interactive={true}
+          />
+        </div>
+      )}
 
       {activeTab === 'chart' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
